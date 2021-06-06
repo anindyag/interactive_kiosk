@@ -2,11 +2,17 @@ group = 'com.clover'
 
 defaultTasks 'clean', 'assembleDebug'
 
+repositories {
+    google()
+    maven {
+        url 'https://alphacephei.com/maven/'
+    }
+}
 
 apply from: file("${androidBuild}/app.gradle")
 
 android.defaultConfig {
-    minSdkVersion 17
+    minSdkVersion 21
     targetSdkVersion 28
 }
 android {
@@ -22,4 +28,8 @@ android {
 dependencies {
     implementation 'com.clover.sdk:clover-android-sdk:229-SNAPSHOT'
     implementation 'com.clover:common-orders:257-SNAPSHOT'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'net.java.dev.jna:jna:5.8.0@aar'
+    implementation group: 'com.alphacephei', name: 'vosk-android', version: '0.3.23'
+    implementation project(':models')
 }
