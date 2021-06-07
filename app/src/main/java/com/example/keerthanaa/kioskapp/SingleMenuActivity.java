@@ -246,8 +246,12 @@ public class SingleMenuActivity extends Activity implements
       //finish();
     } else if(speech.contains("proceed to check out")) {
       setUiState(STATE_DONE);
+      if (speechService != null) {
+        speechService.stop();
+        speechService.shutdown();
+      }
       if (speechStreamService != null) {
-        speechStreamService = null;
+        speechStreamService.stop();
       }
       proceedAction();
     }
