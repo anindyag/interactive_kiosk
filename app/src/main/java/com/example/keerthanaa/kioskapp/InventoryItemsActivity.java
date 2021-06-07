@@ -1,9 +1,11 @@
 package com.example.keerthanaa.kioskapp;
 
+import android.Manifest;
 import android.accounts.Account;
 import android.app.Activity;
 import android.app.IntentService;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -25,13 +27,28 @@ import com.clover.sdk.v3.order.LineItem;
 import com.clover.sdk.v3.order.Order;
 import com.clover.sdk.v3.order.OrderConnector;
 
+import org.vosk.LibVosk;
+import org.vosk.LogLevel;
+import org.vosk.Model;
+import org.vosk.Recognizer;
+import org.vosk.android.RecognitionListener;
+import org.vosk.android.SpeechService;
+import org.vosk.android.SpeechStreamService;
+import org.vosk.android.StorageService;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import static android.content.ContentValues.TAG;
 
-public class InventoryItemsActivity extends Activity {
+public class InventoryItemsActivity extends Activity implements
+        RecognitionListener {
   private String TAG = InventoryItemsActivity.class.getSimpleName();
   private LineItem lineItem = null;
   private OrderConnector orderConnector;
@@ -45,6 +62,24 @@ public class InventoryItemsActivity extends Activity {
   Double menuPrice = 0.0;
   String menuName, menuId;
   int menuImageId;
+  ArrayList<CustomMenu> customMenus;
+  TextView menuQuantityView;
+  Button addToCartView;
+  Button proceedView;
+  LinearLayout menuQuantityLayout;
+
+  static private final int STATE_START = 0;
+  static private final int STATE_READY = 1;
+  static private final int STATE_DONE = 2;
+  static private final int STATE_FILE = 3;
+  static private final int STATE_MIC = 4;
+
+  /* Used to handle permission request */
+  private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
+
+  private Model model;
+  private SpeechService speechService;
+  private SpeechStreamService speechStreamService;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +97,7 @@ public class InventoryItemsActivity extends Activity {
 
 
     // Create an ArrayList of customMenu objects
-    ArrayList<CustomMenu> customMenus = new ArrayList<CustomMenu>();
+    customMenus = new ArrayList<CustomMenu>();
     List<Item> menuList = MainActivity.getMenuItemsList();
     customMenus.add(new CustomMenu(menuList.get(0).getName(), menuList.get(0).getPrice(), R.drawable.bacon_crispy_chicken_burger, (menuList.get(0).getId())));
     customMenus.add(new CustomMenu(menuList.get(1).getName(), menuList.get(1).getPrice(), R.drawable.bbq_bacon_burger, (menuList.get(1).getId())));
@@ -94,31 +129,23 @@ public class InventoryItemsActivity extends Activity {
 
     ImageButton incrementButton = (ImageButton) findViewById(R.id.increment);
     ImageButton decrementButton = (ImageButton) findViewById(R.id.decrement);
-    TextView menuQuantityView = (TextView) findViewById(R.id.menu_quantity);
-    Button addToCartView = (Button) findViewById(R.id.add_cart_text);
-    Button proceedView = (Button) findViewById(R.id.proceed);
-    LinearLayout menuQuantityLayout = (LinearLayout) findViewById(R.id.menu_quantity_layout);
+    menuQuantityView = (TextView) findViewById(R.id.menu_quantity);
+    addToCartView = (Button) findViewById(R.id.add_cart_text);
+    proceedView = (Button) findViewById(R.id.proceed);
+    menuQuantityLayout = (LinearLayout) findViewById(R.id.menu_quantity_layout);
 
+    // Check if user has given permission to record audio, init the model after permission is granted
+    int permissionCheck = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO);
+    if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+      ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSIONS_REQUEST_RECORD_AUDIO);
+    } else {
+      initModel();
+    }
 
     gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
       @Override
       public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-        CustomMenu menu = customMenus.get(position);
-        Log.d(TAG, menu.getMenuName() + menu.getMenuPrice());
-        menuQuantity = 1;
-        menuQuantityView.setText(String.valueOf(menuQuantity));
-        menuPrice = (menu.getMenuPrice()) / 100;
-        totalPrice = menuQuantity * menuPrice;
-        addToCartView.setVisibility(View.VISIBLE);
-        if (menuQuantityLayout.getVisibility() == View.GONE) {
-          menuQuantityLayout.setVisibility(View.VISIBLE);
-        }
-        proceedView.setVisibility(View.VISIBLE);
-        addToCartView.setText(getResources().getString(R.string.add_items_cart, menuQuantity, totalPrice));
-        menuName = menu.getMenuName();
-        menuImageId = menu.getImageResourceId();
-        menuId = menu.getMenuId();
+        itemClickAction(parent, view, position, id);
       }
     });
 
@@ -153,25 +180,14 @@ public class InventoryItemsActivity extends Activity {
     addToCartView.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        addLineItemsToOrder(menuName, menuId);
-        Intent menuIntent = new Intent(InventoryItemsActivity.this, SingleMenuActivity.class);
-        Bundle extras = new Bundle();
-        extras.putString("Name", menuName);
-        extras.putDouble("Price", menuPrice);
-        extras.putInt("imageId", menuImageId);
-        extras.putString("orderId", orderId);
-
-        menuIntent.putExtras(extras);
-        startActivity(menuIntent);
+        addToCartAction();
       }
     });
 
     proceedView.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        Intent orderIntent = new Intent(InventoryItemsActivity.this, OrderActivity.class);
-        orderIntent.putExtra("orderId", orderId);
-        startActivity(orderIntent);
+        proceedAction();
       }
     });
 
@@ -260,6 +276,31 @@ public class InventoryItemsActivity extends Activity {
     return item != null ? String.format("%s{id=%s, name=%s, price=%d}", Item.class.getSimpleName(), item.getId(), item.getName(), item.getPrice()) : null;
   }
 
+  private void initModel() {
+    StorageService.unpack(this, "model-en-us", "model",
+            (model) -> {
+              this.model = model;
+              setUiState(STATE_READY);
+            },
+            (exception) -> setErrorState("Failed to unpack the model" + exception.getMessage()));
+  }
+
+  @Override
+  public void onRequestPermissionsResult(int requestCode,
+                                         @NonNull String[] permissions, @NonNull int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+    if (requestCode == PERMISSIONS_REQUEST_RECORD_AUDIO) {
+      if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        // Recognizer initialization is a time-consuming and it involves IO,
+        // so we execute it in async task
+        initModel();
+      } else {
+        finish();
+      }
+    }
+  }
+
   @Override
   protected void onDestroy() {
     super.onDestroy();
@@ -271,6 +312,106 @@ public class InventoryItemsActivity extends Activity {
       lineItemList.clear();
     }
 
+    if (speechService != null) {
+      speechService.stop();
+      speechService.shutdown();
+    }
+
+    if (speechStreamService != null) {
+      speechStreamService.stop();
+    }
+  }
+
+
+  @Override
+  public void onResult(String hypothesis) {
+    //parseSpeech(hypothesis);
+  }
+
+  @Override
+  public void onFinalResult(String hypothesis) {
+    //parseSpeech(hypothesis);
+  }
+
+  @Override
+  public void onPartialResult(String hypothesis) {
+    parseSpeech(hypothesis);
+  }
+
+  @Override
+  public void onError(Exception e) {
+    setErrorState(e.getMessage());
+  }
+
+  @Override
+  public void onTimeout() {
+    setUiState(STATE_DONE);
+  }
+
+  private void setUiState(int state) {
+    switch (state) {
+      case STATE_START:
+        //resultView.setText(R.string.preparing);
+        //resultView.setMovementMethod(new ScrollingMovementMethod());
+        //findViewById(R.id.recognize_file).setEnabled(false);
+        //findViewById(R.id.recognize_mic).setEnabled(false);
+        //findViewById(R.id.pause).setEnabled((false));
+        break;
+      case STATE_READY:
+        recognizeMicrophone();
+        //resultView.setText(R.string.ready);
+        //((Button) findViewById(R.id.recognize_mic)).setText(R.string.recognize_microphone);
+        //findViewById(R.id.recognize_file).setEnabled(true);
+        //findViewById(R.id.recognize_mic).setEnabled(true);
+        //findViewById(R.id.pause).setEnabled((false));
+        break;
+      case STATE_DONE:
+        //((Button) findViewById(R.id.recognize_file)).setText(R.string.recognize_file);
+        //((Button) findViewById(R.id.recognize_mic)).setText(R.string.recognize_microphone);
+        //findViewById(R.id.recognize_file).setEnabled(true);
+        //findViewById(R.id.recognize_mic).setEnabled(true);
+        //findViewById(R.id.pause).setEnabled((false));
+        break;
+      case STATE_FILE:
+        //((Button) findViewById(R.id.recognize_file)).setText(R.string.stop_file);
+        //resultView.setText(getString(R.string.starting));
+        //findViewById(R.id.recognize_mic).setEnabled(false);
+        //findViewById(R.id.recognize_file).setEnabled(true);
+        //findViewById(R.id.pause).setEnabled((false));
+        break;
+      case STATE_MIC:
+        //((Button) findViewById(R.id.recognize_mic)).setText(R.string.stop_microphone);
+        //resultView.setText(getString(R.string.say_something));
+        //findViewById(R.id.recognize_file).setEnabled(false);
+        //findViewById(R.id.recognize_mic).setEnabled(true);
+        //findViewById(R.id.pause).setEnabled((true));
+        break;
+      default:
+        throw new IllegalStateException("Unexpected value: " + state);
+    }
+  }
+
+  private void setErrorState(String message) {
+    //resultView.setText(message);
+    //((Button) findViewById(R.id.recognize_mic)).setText(R.string.recognize_microphone);
+    //findViewById(R.id.recognize_file).setEnabled(false);
+    //findViewById(R.id.recognize_mic).setEnabled(false);
+  }
+  private void recognizeMicrophone() {
+    if (speechService != null) {
+      setUiState(STATE_DONE);
+      speechService.stop();
+      speechService = null;
+    } else {
+      setUiState(STATE_MIC);
+      try {
+        Recognizer rec = new Recognizer(model, 16000.0f);
+        speechService = new SpeechService(rec, 16000.0f);
+        speechService.startListening(this);
+      } catch (IOException e) {
+        setErrorState(e.getMessage());
+      }
+    }
   }
 
   public static List<LineItem> getLineItemsList() {
@@ -285,6 +426,71 @@ public class InventoryItemsActivity extends Activity {
 
   public void print(PrintJob printJob) {
     printJob.print(this, CloverAccount.getAccount(this));
+  }
+
+  private void addToCartAction() {
+    addLineItemsToOrder(menuName, menuId);
+    Intent menuIntent = new Intent(InventoryItemsActivity.this, SingleMenuActivity.class);
+    Bundle extras = new Bundle();
+    extras.putString("Name", menuName);
+    extras.putDouble("Price", menuPrice);
+    extras.putInt("imageId", menuImageId);
+    extras.putString("orderId", orderId);
+
+    menuIntent.putExtras(extras);
+    startActivity(menuIntent);
+  }
+
+  private void proceedAction() {
+    Intent orderIntent = new Intent(InventoryItemsActivity.this, OrderActivity.class);
+    orderIntent.putExtra("orderId", orderId);
+    startActivity(orderIntent);
+  }
+
+  private void itemClickAction(AdapterView<?> parent, View view, int position, long id) {
+    CustomMenu menu = customMenus.get(position);
+    Log.d(TAG, menu.getMenuName() + menu.getMenuPrice());
+    menuQuantity = 1;
+    menuQuantityView.setText(String.valueOf(menuQuantity));
+    menuPrice = (menu.getMenuPrice()) / 100;
+    totalPrice = menuQuantity * menuPrice;
+    addToCartView.setVisibility(View.VISIBLE);
+    if (menuQuantityLayout.getVisibility() == View.GONE) {
+      menuQuantityLayout.setVisibility(View.VISIBLE);
+    }
+    proceedView.setVisibility(View.VISIBLE);
+    addToCartView.setText(getResources().getString(R.string.add_items_cart, menuQuantity, totalPrice));
+    menuName = menu.getMenuName();
+    menuImageId = menu.getImageResourceId();
+    menuId = menu.getMenuId();
+  }
+
+  private void parseSpeech(String speech) {
+    if (speech.contains("burger")) {
+      itemClickAction(null, null, 4, 0);
+    } else if(speech.contains("wine")) {
+      itemClickAction(null, null, 3, 0);
+    } else if(speech.contains("add to cart")) {
+      setUiState(STATE_DONE);
+      if (speechService != null) {
+        speechService.stop();
+        speechService.shutdown();
+      }
+      if (speechStreamService != null) {
+        speechStreamService.stop();
+      }
+      addToCartAction();
+    } else if(speech.contains("proceed without selecting")) {
+      setUiState(STATE_DONE);
+      if (speechService != null) {
+        speechService.stop();
+        speechService.shutdown();
+      }
+      if (speechStreamService != null) {
+        speechStreamService.stop();
+      }
+      proceedAction();
+    }
   }
 
 }

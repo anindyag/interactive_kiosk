@@ -90,7 +90,7 @@ public class MainActivity extends Activity implements
     orderButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        toNextScreen();
+        toInventoryItemsActivityScreen();
         //startActivity(new Intent(MainActivity.this, InventoryItemsActivity.class));
         //startActivity(new Intent(MainActivity.this, VoskActivity.class));
       }
@@ -187,26 +187,28 @@ public class MainActivity extends Activity implements
 
   @Override
   public void onResult(String hypothesis) {
-    if (hypothesis.contains("go to next screen")) {
-      toNextScreen();
-    }
+    /*parseSpeech(hypothesis);
+    setUiState(STATE_DONE);
+    if (speechStreamService != null) {
+      speechStreamService = null;
+    }*/
   }
 
   @Override
   public void onFinalResult(String hypothesis) {
-    if (hypothesis.contains("go to next screen")) {
-      toNextScreen();
-    }
+    /*parseSpeech(hypothesis);
     setUiState(STATE_DONE);
     if (speechStreamService != null) {
       speechStreamService = null;
-    }
+    }*/
   }
 
   @Override
   public void onPartialResult(String hypothesis) {
-    if (hypothesis.contains("go to next screen")) {
-      toNextScreen();
+    parseSpeech(hypothesis);
+    setUiState(STATE_DONE);
+    if (speechStreamService != null) {
+      speechStreamService = null;
     }
   }
 
@@ -286,8 +288,22 @@ public class MainActivity extends Activity implements
     }
   }
 
-  private void toNextScreen() {
+  private void toInventoryItemsActivityScreen() {
     startActivity(new Intent(MainActivity.this, InventoryItemsActivity.class));
+  }
+
+  private void parseSpeech(String speech) {
+    if (speech.contains("start an order")) {
+      if (speechService != null) {
+        speechService.stop();
+        speechService.shutdown();
+      }
+
+      if (speechStreamService != null) {
+        speechStreamService.stop();
+      }
+      toInventoryItemsActivityScreen();
+    }
   }
 
   private void startActivityOnSecondaryDisplay() {
