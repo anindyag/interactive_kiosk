@@ -16,13 +16,10 @@ import com.clover.sdk.util.CloverAccount;
 import com.clover.sdk.v3.inventory.InventoryConnector;
 import com.clover.sdk.v3.inventory.Item;
 
-import org.vosk.LibVosk;
-import org.vosk.LogLevel;
 import org.vosk.Model;
 import org.vosk.Recognizer;
 import org.vosk.android.RecognitionListener;
 import org.vosk.android.SpeechService;
-import org.vosk.android.SpeechStreamService;
 import org.vosk.android.StorageService;
 
 import java.io.IOException;
@@ -45,15 +42,8 @@ public class MainActivity extends Activity implements
 
   private static List<Item> menuItemsList = new ArrayList<Item>();
 
-  static private final int STATE_START = 0;
-  static private final int STATE_READY = 1;
-  static private final int STATE_DONE = 2;
-  static private final int STATE_FILE = 3;
-  static private final int STATE_MIC = 4;
-
   private Model model;
   private SpeechService speechService;
-  private SpeechStreamService speechStreamService;
 
   /* Used to handle permission request */
   private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
@@ -78,21 +68,11 @@ public class MainActivity extends Activity implements
 
     startActivityOnSecondaryDisplay();
 
-    // Check if user has given permission to record audio, init the model after permission is granted
-    int permissionCheck = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO);
-    if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-      ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSIONS_REQUEST_RECORD_AUDIO);
-    } else {
-      initModel();
-    }
-
     Button orderButton = (Button) findViewById(R.id.order_button);
     orderButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
         toInventoryItemsActivityScreen();
-        //startActivity(new Intent(MainActivity.this, InventoryItemsActivity.class));
-        //startActivity(new Intent(MainActivity.this, VoskActivity.class));
       }
     });
   }
@@ -101,7 +81,7 @@ public class MainActivity extends Activity implements
     StorageService.unpack(this, "model-en-us", "model",
             (model) -> {
               this.model = model;
-              setUiState(STATE_READY);
+              recognizeMicrophone();
             },
             (exception) -> setErrorState("Failed to unpack the model" + exception.getMessage()));
   }
@@ -127,6 +107,13 @@ public class MainActivity extends Activity implements
     super.onResume();
     menuItemsList.clear();
     fetchObjectsFromServiceConnector();
+    // Check if user has given permission to record audio, init the model after permission is granted
+    int permissionCheck = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO);
+    if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+      ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSIONS_REQUEST_RECORD_AUDIO);
+    } else {
+      initModel();
+    }
   }
 
   private void fetchObjectsFromServiceConnector() {
@@ -179,37 +166,19 @@ public class MainActivity extends Activity implements
       speechService.stop();
       speechService.shutdown();
     }
-
-    if (speechStreamService != null) {
-      speechStreamService.stop();
-    }
   }
 
   @Override
   public void onResult(String hypothesis) {
-    /*parseSpeech(hypothesis);
-    setUiState(STATE_DONE);
-    if (speechStreamService != null) {
-      speechStreamService = null;
-    }*/
+    parseSpeech(hypothesis);
   }
 
   @Override
   public void onFinalResult(String hypothesis) {
-    /*parseSpeech(hypothesis);
-    setUiState(STATE_DONE);
-    if (speechStreamService != null) {
-      speechStreamService = null;
-    }*/
   }
 
   @Override
   public void onPartialResult(String hypothesis) {
-    parseSpeech(hypothesis);
-    setUiState(STATE_DONE);
-    if (speechStreamService != null) {
-      speechStreamService = null;
-    }
   }
 
   @Override
@@ -219,65 +188,16 @@ public class MainActivity extends Activity implements
 
   @Override
   public void onTimeout() {
-    setUiState(STATE_DONE);
-  }
-
-  private void setUiState(int state) {
-    switch (state) {
-      case STATE_START:
-        //resultView.setText(R.string.preparing);
-        //resultView.setMovementMethod(new ScrollingMovementMethod());
-        //findViewById(R.id.recognize_file).setEnabled(false);
-        //findViewById(R.id.recognize_mic).setEnabled(false);
-        //findViewById(R.id.pause).setEnabled((false));
-        break;
-      case STATE_READY:
-        recognizeMicrophone();
-        //resultView.setText(R.string.ready);
-        //((Button) findViewById(R.id.recognize_mic)).setText(R.string.recognize_microphone);
-        //findViewById(R.id.recognize_file).setEnabled(true);
-        //findViewById(R.id.recognize_mic).setEnabled(true);
-        //findViewById(R.id.pause).setEnabled((false));
-        break;
-      case STATE_DONE:
-        //((Button) findViewById(R.id.recognize_file)).setText(R.string.recognize_file);
-        //((Button) findViewById(R.id.recognize_mic)).setText(R.string.recognize_microphone);
-        //findViewById(R.id.recognize_file).setEnabled(true);
-        //findViewById(R.id.recognize_mic).setEnabled(true);
-        //findViewById(R.id.pause).setEnabled((false));
-        break;
-      case STATE_FILE:
-        //((Button) findViewById(R.id.recognize_file)).setText(R.string.stop_file);
-        //resultView.setText(getString(R.string.starting));
-        //findViewById(R.id.recognize_mic).setEnabled(false);
-        //findViewById(R.id.recognize_file).setEnabled(true);
-        //findViewById(R.id.pause).setEnabled((false));
-        break;
-      case STATE_MIC:
-        //((Button) findViewById(R.id.recognize_mic)).setText(R.string.stop_microphone);
-        //resultView.setText(getString(R.string.say_something));
-        //findViewById(R.id.recognize_file).setEnabled(false);
-        //findViewById(R.id.recognize_mic).setEnabled(true);
-        //findViewById(R.id.pause).setEnabled((true));
-        break;
-      default:
-        throw new IllegalStateException("Unexpected value: " + state);
-    }
   }
 
   private void setErrorState(String message) {
-    //resultView.setText(message);
-    //((Button) findViewById(R.id.recognize_mic)).setText(R.string.recognize_microphone);
-    //findViewById(R.id.recognize_file).setEnabled(false);
-    //findViewById(R.id.recognize_mic).setEnabled(false);
+
   }
   private void recognizeMicrophone() {
     if (speechService != null) {
-      setUiState(STATE_DONE);
       speechService.stop();
       speechService = null;
     } else {
-      setUiState(STATE_MIC);
       try {
         Recognizer rec = new Recognizer(model, 16000.0f);
         speechService = new SpeechService(rec, 16000.0f);
@@ -297,10 +217,7 @@ public class MainActivity extends Activity implements
       if (speechService != null) {
         speechService.stop();
         speechService.shutdown();
-      }
-
-      if (speechStreamService != null) {
-        speechStreamService.stop();
+        speechService = null;
       }
       toInventoryItemsActivityScreen();
     }

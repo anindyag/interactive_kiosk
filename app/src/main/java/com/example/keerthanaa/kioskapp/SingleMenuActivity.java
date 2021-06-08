@@ -15,7 +15,6 @@ import org.vosk.Model;
 import org.vosk.Recognizer;
 import org.vosk.android.RecognitionListener;
 import org.vosk.android.SpeechService;
-import org.vosk.android.SpeechStreamService;
 import org.vosk.android.StorageService;
 
 import java.io.IOException;
@@ -30,18 +29,11 @@ public class SingleMenuActivity extends Activity implements
   private String TAG = SingleMenuActivity.class.getSimpleName();
   private String menuName, orderId;
 
-  static private final int STATE_START = 0;
-  static private final int STATE_READY = 1;
-  static private final int STATE_DONE = 2;
-  static private final int STATE_FILE = 3;
-  static private final int STATE_MIC = 4;
-
   /* Used to handle permission request */
   private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
 
   private Model model;
   private SpeechService speechService;
-  private SpeechStreamService speechStreamService;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -77,14 +69,6 @@ public class SingleMenuActivity extends Activity implements
       menuPriceView.setText(getResources().getString(R.string.single_menu_price, menuPrice));
     }
 
-    // Check if user has given permission to record audio, init the model after permission is granted
-    int permissionCheck = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO);
-    if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-      ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSIONS_REQUEST_RECORD_AUDIO);
-    } else {
-      initModel();
-    }
-
     Button checkout = (Button) findViewById(R.id.checkout);
     Button extraMenu = (Button) findViewById(R.id.choose_extra_menu);
     extraMenu.setOnClickListener(new View.OnClickListener() {
@@ -114,7 +98,7 @@ public class SingleMenuActivity extends Activity implements
     StorageService.unpack(this, "model-en-us", "model",
             (model) -> {
               this.model = model;
-              setUiState(STATE_READY);
+              recognizeMicrophone();
             },
             (exception) -> setErrorState("Failed to unpack the model" + exception.getMessage()));
   }
@@ -141,13 +125,21 @@ public class SingleMenuActivity extends Activity implements
     if (speechService != null) {
       speechService.stop();
       speechService.shutdown();
-    }
-
-    if (speechStreamService != null) {
-      speechStreamService.stop();
+      speechService = null;
     }
   }
 
+  @Override
+  protected void onResume() {
+    super.onResume();
+    // Check if user has given permission to record audio, init the model after permission is granted
+    int permissionCheck = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO);
+    if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+      ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSIONS_REQUEST_RECORD_AUDIO);
+    } else {
+      initModel();
+    }
+  }
 
   @Override
   public void onResult(String hypothesis) {
@@ -156,12 +148,10 @@ public class SingleMenuActivity extends Activity implements
 
   @Override
   public void onFinalResult(String hypothesis) {
-    //parseSpeech(hypothesis);
   }
 
   @Override
   public void onPartialResult(String hypothesis) {
-    //parseSpeech(hypothesis);
   }
 
   @Override
@@ -171,65 +161,16 @@ public class SingleMenuActivity extends Activity implements
 
   @Override
   public void onTimeout() {
-    setUiState(STATE_DONE);
-  }
-
-  private void setUiState(int state) {
-    switch (state) {
-      case STATE_START:
-        //resultView.setText(R.string.preparing);
-        //resultView.setMovementMethod(new ScrollingMovementMethod());
-        //findViewById(R.id.recognize_file).setEnabled(false);
-        //findViewById(R.id.recognize_mic).setEnabled(false);
-        //findViewById(R.id.pause).setEnabled((false));
-        break;
-      case STATE_READY:
-        recognizeMicrophone();
-        //resultView.setText(R.string.ready);
-        //((Button) findViewById(R.id.recognize_mic)).setText(R.string.recognize_microphone);
-        //findViewById(R.id.recognize_file).setEnabled(true);
-        //findViewById(R.id.recognize_mic).setEnabled(true);
-        //findViewById(R.id.pause).setEnabled((false));
-        break;
-      case STATE_DONE:
-        //((Button) findViewById(R.id.recognize_file)).setText(R.string.recognize_file);
-        //((Button) findViewById(R.id.recognize_mic)).setText(R.string.recognize_microphone);
-        //findViewById(R.id.recognize_file).setEnabled(true);
-        //findViewById(R.id.recognize_mic).setEnabled(true);
-        //findViewById(R.id.pause).setEnabled((false));
-        break;
-      case STATE_FILE:
-        //((Button) findViewById(R.id.recognize_file)).setText(R.string.stop_file);
-        //resultView.setText(getString(R.string.starting));
-        //findViewById(R.id.recognize_mic).setEnabled(false);
-        //findViewById(R.id.recognize_file).setEnabled(true);
-        //findViewById(R.id.pause).setEnabled((false));
-        break;
-      case STATE_MIC:
-        //((Button) findViewById(R.id.recognize_mic)).setText(R.string.stop_microphone);
-        //resultView.setText(getString(R.string.say_something));
-        //findViewById(R.id.recognize_file).setEnabled(false);
-        //findViewById(R.id.recognize_mic).setEnabled(true);
-        //findViewById(R.id.pause).setEnabled((true));
-        break;
-      default:
-        throw new IllegalStateException("Unexpected value: " + state);
-    }
   }
 
   private void setErrorState(String message) {
-    //resultView.setText(message);
-    //((Button) findViewById(R.id.recognize_mic)).setText(R.string.recognize_microphone);
-    //findViewById(R.id.recognize_file).setEnabled(false);
-    //findViewById(R.id.recognize_mic).setEnabled(false);
   }
+
   private void recognizeMicrophone() {
     if (speechService != null) {
-      setUiState(STATE_DONE);
       speechService.stop();
       speechService = null;
     } else {
-      setUiState(STATE_MIC);
       try {
         Recognizer rec = new Recognizer(model, 16000.0f);
         speechService = new SpeechService(rec, 16000.0f);
@@ -242,16 +183,12 @@ public class SingleMenuActivity extends Activity implements
 
   private void parseSpeech(String speech) {
     if(speech.contains("choose more items")) {
-      //FIXME: Need to close the current activity here
-      //finish();
+      this.finish();
     } else if(speech.contains("proceed to check out")) {
-      setUiState(STATE_DONE);
       if (speechService != null) {
         speechService.stop();
         speechService.shutdown();
-      }
-      if (speechStreamService != null) {
-        speechStreamService.stop();
+        speechService = null;
       }
       proceedAction();
     }
