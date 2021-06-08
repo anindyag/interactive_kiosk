@@ -288,9 +288,11 @@ public class OrderActivity extends Activity implements
   }
 
   private void parseSpeech(String speech) {
-    if(speech.contains("back")) {
+    if(speech.contains("go back")) {
+      Log.d(TAG, "go back detected");
       this.finish();
-    } else if(speech.contains("pay now")) {
+    } else if(speech.contains("pay")) {
+      Log.d(TAG, "pay detected");
       if (speechService != null) {
         speechService.stop();
         speechService.shutdown();

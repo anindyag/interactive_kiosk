@@ -213,7 +213,8 @@ public class MainActivity extends Activity implements
   }
 
   private void parseSpeech(String speech) {
-    if (speech.contains("start an order")) {
+    if (speech.contains("start order")) {
+      Log.d(TAG, "start order detected");
       if (speechService != null) {
         speechService.stop();
         speechService.shutdown();

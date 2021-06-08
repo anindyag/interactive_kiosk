@@ -404,11 +404,14 @@ public class InventoryItemsActivity extends Activity implements
   }
 
   private void parseSpeech(String speech) {
-    if (speech.contains("burger")) {
-      itemClickAction(null, null, 4, 0);
-    } else if(speech.contains("wine")) {
-      itemClickAction(null, null, 3, 0);
+    if (speech.contains("chicken burger")) {
+      Log.d(TAG, "chicken burger detected");
+      itemClickAction(null, null, 2, 0);
+    } else if(speech.contains("shake")) {
+      itemClickAction(null, null, 8, 0);
+      Log.d(TAG, "shake detected");
     } else if(speech.contains("add to cart")) {
+      Log.d(TAG, "add to cart detected");
       if (speechService != null) {
         speechService.stop();
         speechService.shutdown();
@@ -416,6 +419,7 @@ public class InventoryItemsActivity extends Activity implements
       }
       addToCartAction();
     } else if(speech.contains("proceed without selecting")) {
+      Log.d(TAG, "proceed without selecting detected");
       if (speechService != null) {
         speechService.stop();
         speechService.shutdown();

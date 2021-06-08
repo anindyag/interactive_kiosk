@@ -183,8 +183,10 @@ public class SingleMenuActivity extends Activity implements
 
   private void parseSpeech(String speech) {
     if(speech.contains("choose more items")) {
+      Log.d(TAG, "choose more items detected");
       this.finish();
     } else if(speech.contains("proceed to check out")) {
+      Log.d(TAG, "proceed to check out");
       if (speechService != null) {
         speechService.stop();
         speechService.shutdown();
