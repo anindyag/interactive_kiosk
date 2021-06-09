@@ -1,36 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?><!-- Layout for a single Grid item -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
     android:minHeight="?android:attr/listPreferredItemHeight"
-    android:orientation="horizontal"
     android:padding="16dp">
 
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
     <ImageView
         android:id="@+id/grid_item_icon"
-        android:layout_width="150dp"
-        android:layout_height="150dp" />
+        android:layout_width="200dp"
+        android:layout_height="200dp" />
 
-    <LinearLayout
-        android:layout_width="0dp"
+    <TextView
+        android:id="@+id/menu_name"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:paddingLeft="16dp">
+        android:textSize="20dp"
+        android:layout_alignBottom="@id/grid_item_icon"
+        android:layout_marginRight="8dp"
+        android:visibility="gone"/>
 
-        <TextView
-            android:id="@+id/menu_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="20dp" />
+    <TextView
+        android:id="@+id/menu_price"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20dp"
+        android:layout_alignTop="@id/grid_item_icon"
+        android:layout_alignRight="@id/grid_item_icon"
+        android:layout_marginLeft="8dp"
+        android:visibility="gone"/>
 
-        <TextView
-            android:id="@+id/menu_price"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="20dp" />
+    </RelativeLayout>
 
-    </LinearLayout>
+
 
 </LinearLayout>

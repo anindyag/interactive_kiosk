@@ -3,26 +3,25 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal">
-
     <TextView
         android:id="@+id/order_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="0.5"
+        android:layout_weight="0.4"
         android:textSize="30dp" />
 
     <TextView
         android:id="@+id/order_quantity"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="0.2"
+        android:layout_weight="0.1"
         android:textSize="30dp" />
 
     <TextView
         android:id="@+id/order_price"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="0.3"
+        android:layout_weight="0.1"
         android:textSize="30dp" />
 
 </LinearLayout>

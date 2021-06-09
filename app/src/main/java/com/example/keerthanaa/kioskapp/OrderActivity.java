@@ -103,6 +103,7 @@ public class OrderActivity extends Activity implements
     setContentView(R.layout.activity_order);
     Intent orderIntent = getIntent();
     orderId = orderIntent.getStringExtra("orderId");
+    int imageId = orderIntent.getIntExtra("imageId", 0);
 
     account = CloverAccount.getAccount(this);
     orderConnector = new OrderConnector(this, account, null);
@@ -351,6 +352,7 @@ public class OrderActivity extends Activity implements
   @Override
   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     if (requestCode == 100 && resultCode == RESULT_OK) {
+      Log.d(TAG, "on activity result");
       Payment payment = data.getParcelableExtra(Intents.EXTRA_PAYMENT);
       String paymentId = data.getStringExtra(Intents.EXTRA_PAYMENT_ID);
       String orderId = data.getStringExtra(Intents.EXTRA_ORDER_ID);
@@ -382,14 +384,18 @@ public class OrderActivity extends Activity implements
     extDisaplyIntent.putExtra("orderId", orderId);
     extDisaplyIntent.putExtra("total", total);
     showPayInProgressDialog();
+    securePay();
+   }
 
+  private void securePay() {
+    Log.d(TAG, "orderid" + orderId);
     Intent intent = new Intent(ACTION_SECURE_PAY);
     PayIntent payIntent = new PayIntent.Builder()
-            .amount((new Double(total * 100)).longValue())
-            .orderId(orderId)
-            .cardEntryMethods(Intents.CARD_ENTRY_METHOD_ALL)
-            .build();
+        .amount((new Double(total * 100)).longValue())
+        .orderId(orderId)
+        .cardEntryMethods(Intents.CARD_ENTRY_METHOD_ALL)
+        .build();
     payIntent.addTo(intent);
-    startActivity(intent);
+    startActivityForResult(intent, 100);
   }
 }

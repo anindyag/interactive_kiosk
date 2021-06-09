@@ -6,15 +6,32 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:background="@color/main_green"
-        android:paddingTop="16dp"
-        android:text="@string/menu_screen_header"
-        android:textAlignment="center"
-        android:textColor="@color/base_button_text_color_selector"
-        android:textSize="35dp" />
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/clover_menu_header"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:background="@color/main_green"
+            android:paddingTop="16dp"
+            android:text="@string/menu_screen_header"
+            android:textAlignment="center"
+            android:textColor="@color/base_button_text_color_selector"
+            android:textSize="35dp" />
+
+        <ImageView
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_alignTop="@+id/clover_menu_header"
+            android:layout_alignRight="@+id/clover_menu_header"
+            android:src="@drawable/ic_clover_os"
+            android:layout_margin="16dp"
+            android:tint="@color/white"/>
+
+    </RelativeLayout>
+
 
     <GridView xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
@@ -24,53 +41,60 @@
         android:layout_weight="0.85"
         android:gravity="center"
         android:numColumns="2"
-        android:stretchMode="columnWidth">
+        android:stretchMode="columnWidth"
+        android:layout_marginBottom="16dp">
 
     </GridView>
 
-    <Button
-        android:id="@+id/kitchen_display_order"
-        style="@style/Button"
+    <RelativeLayout
         android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_weight="0.05"
-        android:text="@string/kitchen_display"/>
+        android:layout_height="wrap_content">
 
-    <LinearLayout
-        android:id="@+id/menu_quantity_layout"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="0.05"
-        android:gravity="center_horizontal"
-        android:orientation="horizontal"
-        android:visibility="gone">
-
-        <ImageButton
-            android:id="@+id/decrement"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:background="@color/main_green"
-            android:clickable="true"
-            android:src="@drawable/decrement" />
-
-        <TextView
-            android:id="@+id/menu_quantity"
+        <LinearLayout
+            android:id="@+id/menu_quantity_layout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="25dp"
-            android:layout_marginRight="25dp"
-            android:text="1"
-            android:textColor="@color/base_button_text_color_selector"
-            android:textSize="40dp" />
+            android:orientation="horizontal"
+            android:visibility="gone"
+            android:layout_marginLeft="32dp">
 
-        <ImageButton
-            android:id="@+id/increment"
+            <ImageButton
+                android:id="@+id/decrement"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:background="@color/main_green"
+                android:clickable="true"
+                android:src="@drawable/decrement" />
+
+            <TextView
+                android:id="@+id/menu_quantity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="25dp"
+                android:layout_marginRight="25dp"
+                android:text="1"
+                android:textColor="@color/base_button_text_color_selector"
+                android:textSize="40dp" />
+
+            <ImageButton
+                android:id="@+id/increment"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:background="@color/main_green"
+                android:clickable="true"
+                android:src="@drawable/increment" />
+
+        </LinearLayout>
+
+        <ImageView
             android:layout_width="60dp"
             android:layout_height="60dp"
-            android:background="@color/main_green"
-            android:clickable="true"
-            android:src="@drawable/increment" />
-    </LinearLayout>
+            android:src="@drawable/ic_microphone"
+            android:tint="@color/black_80"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="32dp"/>
+    </RelativeLayout>
+
 
     <LinearLayout
         android:layout_width="match_parent"

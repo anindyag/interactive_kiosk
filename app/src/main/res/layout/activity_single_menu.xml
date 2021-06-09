@@ -4,15 +4,32 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:background="@color/main_green"
-        android:paddingTop="16dp"
-        android:text="@string/single_menu_screen_header"
-        android:textAlignment="center"
-        android:textColor="@color/base_button_text_color_selector"
-        android:textSize="35dp" />
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/selected_menu_header"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:background="@color/main_green"
+            android:paddingTop="16dp"
+            android:text="@string/single_menu_screen_header"
+            android:textAlignment="center"
+            android:textColor="@color/base_button_text_color_selector"
+            android:textSize="35dp" />
+
+        <ImageView
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_alignTop="@+id/welcome"
+            android:layout_alignRight="@+id/selected_menu_header"
+            android:src="@drawable/ic_clover_os"
+            android:layout_margin="16dp"
+            android:tint="@color/white"/>
+
+    </RelativeLayout>
+
 
     <TextView
         android:id="@+id/single_menu_name"
@@ -36,9 +53,21 @@
         android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:layout_gravity="center_horizontal"
-        android:layout_weight="0.50" />
+        android:layout_weight="0.50"
+        android:padding="32dp" />
 
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
 
+        <ImageView
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/ic_microphone"
+            android:tint="@color/black_80"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="32dp"/>
+    </RelativeLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -55,7 +84,6 @@
             android:layout_marginRight="16dp"
             android:layout_weight="0.5"
             android:text="@string/choose_extra_menu_text" />
-
 
         <Button
             android:id="@+id/checkout"

@@ -1,11 +1,11 @@
 <resources>
     <string name="app_name">KIoskApp</string>
-    <string name="welcome_button">Start</string>
+    <string name="welcome_button">Hungry?</string>
     <string name="pay_button">Pay Now</string>
-    <string name="menu_screen_header">Clover Cafe menu !!</string>
-    <string name="single_menu_screen_header">Your selected menu item !!</string>
+    <string name="menu_screen_header">Clover Burgers menu !!</string>
+    <string name="single_menu_screen_header">Selected menu item !!</string>
     <string name="menu_screen_footer">Choose your menu</string>
-    <string name="welcome_screen_header">Welcome to Clover Cafe </string>
+    <string name="welcome_screen_header">Welcome to Clover Burgers </string>
     <string name="add_items_cart">Add %1$d to cart $ %2$.2f</string>
     <string name="single_menu_price">Price : $ %1$.2f</string>
     <string name="order_screen_header">Your Cart</string>

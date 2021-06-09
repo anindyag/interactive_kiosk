@@ -66,7 +66,7 @@ public class MainActivity extends Activity implements
     inventoryConnector = new InventoryConnector(this, CloverAccount.getAccount(this), null);
     inventoryConnector.connect();
 
-    startActivityOnSecondaryDisplay();
+    //startActivityOnSecondaryDisplay();
 
     Button orderButton = (Button) findViewById(R.id.order_button);
     orderButton.setOnClickListener(new View.OnClickListener() {

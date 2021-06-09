@@ -10,7 +10,9 @@
         android:layout_height="wrap_content"
         android:text="@string/pay_success"
         android:textColor="@color/base_button_text_color_selector"
-        android:textSize="50dp" />
+        android:textSize="50dp"
+        android:gravity="center_horizontal"
+        android:layout_centerInParent="true"/>
 
     <Button
         android:id="@+id/exit"

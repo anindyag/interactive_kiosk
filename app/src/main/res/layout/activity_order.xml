@@ -6,16 +6,33 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:layout_marginBottom="16dp"
-        android:background="@color/main_green"
-        android:paddingTop="16dp"
-        android:text="@string/order_screen_header"
-        android:textAlignment="center"
-        android:textColor="@color/base_button_text_color_selector"
-        android:textSize="35dp" />
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/order_screen_header"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:layout_marginBottom="16dp"
+            android:background="@color/main_green"
+            android:paddingTop="16dp"
+            android:text="@string/order_header"
+            android:textAlignment="center"
+            android:textColor="@color/base_button_text_color_selector"
+            android:textSize="35dp" />
+
+        <ImageView
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_alignTop="@+id/order_screen_header"
+            android:layout_alignRight="@+id/order_screen_header"
+            android:src="@drawable/ic_clover_os"
+            android:layout_margin="16dp"
+            android:tint="@color/white"/>
+    </RelativeLayout>
+
 
     <TextView
         android:layout_width="match_parent"
@@ -33,7 +50,8 @@
         android:layout_weight="0.1"
         android:text="@string/order_header"
         android:textAlignment="center"
-        android:textSize="30dp" />
+        android:textSize="30dp"
+        android:visibility="gone"/>
 
     <ListView xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
@@ -41,7 +59,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginLeft="16dp"
-        android:layout_weight="0.35"></ListView>
+        android:layout_weight="0.15"></ListView>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -120,7 +138,8 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="0.025"
-        android:text="@string/kitchen_display"/>
+        android:text="@string/kitchen_display"
+        android:visibility="gone"/>
 
     <Button
         android:id="@+id/exit_button"
@@ -129,6 +148,21 @@
         android:layout_width="match_parent"
         android:layout_weight="0.025"
         android:text="@string/exit"/>
+
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/ic_microphone"
+            android:tint="@color/black_80"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="32dp"/>
+
+    </RelativeLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -145,7 +179,6 @@
             android:layout_marginRight="16dp"
             android:layout_weight="0.025"
             android:text="@string/back_text" />
-
 
         <Button
             android:id="@+id/pay"

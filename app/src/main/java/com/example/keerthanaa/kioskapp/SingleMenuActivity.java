@@ -28,6 +28,7 @@ public class SingleMenuActivity extends Activity implements
 
   private String TAG = SingleMenuActivity.class.getSimpleName();
   private String menuName, orderId;
+  private int imageId;
 
   /* Used to handle permission request */
   private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
@@ -57,7 +58,7 @@ public class SingleMenuActivity extends Activity implements
       menuName = extras.getString("Name");
       Double menuPrice = extras.getDouble("Price");
       orderId = extras.getString("orderId");
-      int imageId = extras.getInt("imageId");
+      imageId = extras.getInt("imageId");
 
       ImageView menuImage = (ImageView) findViewById(R.id.single_menu_image);
       menuImage.setImageResource(imageId);
@@ -89,7 +90,7 @@ public class SingleMenuActivity extends Activity implements
 
   private void proceedAction() {
     Intent orderIntent = new Intent(SingleMenuActivity.this, OrderActivity.class);
-    orderIntent.putExtra("orderId", orderId);
+    orderIntent.putExtra("imageId", imageId);
     Log.d(TAG, "order id "+ orderId);
     startActivity(orderIntent);
   }
